@@ -1,5 +1,5 @@
-import discord, json, logging
-import log
+import discord
+from . import log
 
 class EndreBot(discord.Client):
 	def __init__(self):
@@ -18,10 +18,3 @@ class EndreBot(discord.Client):
 	
 	def run(self, token):
 		super().run(token, bot=False)
-
-bot = EndreBot()
-
-with open('config/config.json') as f:
-	cfg = json.load(f)
-	bot.run(cfg['token'])
-	log.shutdown()
