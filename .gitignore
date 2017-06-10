@@ -1,3 +1,4 @@
-/misc/
 __pycache__
-*.cfg
+logs
+config
+misc
