@@ -1,9 +1,10 @@
 from ..command import *
 
 @command()
-async def ping(bot, msg):
-	await msg.edit(content='Pong!')
+async def ping(ctx):
+	return 'Pong!'
 
 @command()
-async def shutdown(bot, msg):
-	await bot.close()
+async def shutdown(ctx):
+	await ctx.message.delete()
+	await ctx.bot.close()

@@ -1,6 +1,18 @@
 import sys
 
-__all__ = ['command']
+__all__ = ['command', 'Context']
+
+def _message_prop(name):
+	def getter(self):
+		return self.__dict__.setdefault(name, getattr(self.message, name))
+	
+	def setter(self, val):
+		self.__dict__[name] = val
+	
+	def deleter(self):
+		del self.__dict__[name]
+	
+	return property(getter, setter, deleter)
 
 def command(name=None):
 	def decorator(fn):
@@ -20,5 +32,22 @@ class Command:
 		self.name = name
 		self.fn = fn
 	
-	async def invoke(self, bot, message):
-		await self.fn(bot, message)
+	async def invoke(self, ctx):
+		return await self.fn(ctx)
+
+class Context:
+	def __init__(self, bot, message):
+		self.bot = bot
+		self.message = message
+	
+	channel = _message_prop('channel')
+	guild = _message_prop('guild')
+	send = _message_prop('send')
+	
+	@send.getter
+	def send(self):
+		return self.__dict__.setdefault('send', self.message.channel.send)
+	
+	def set_fragment(self, fragment):
+		self.fragment = fragment
+		# TODO: parse args

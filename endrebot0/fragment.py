@@ -1,5 +1,7 @@
 import re
 
+__all__ = ['fragment']
+
 _pattern = re.compile(r'(\{\{[^\}]*\}\})|(\{\[[^\]]*\]\})')
 
 def fragment(content):
@@ -25,15 +27,16 @@ class Fragment:
 		return '%s[%s]' % (self.__class__.__name__, repr(self.content))
 
 class TextFragment(Fragment):
-	async def invoke(self, message):
+	async def invoke(self, ctx):
 		return self.content
 
 class CommandFragment(Fragment):
-	async def invoke(self, message):
+	async def invoke(self, ctx):
 		cmd = self.content[2:-2].strip()
-		return cmd
+		command = ctx.bot.commands[cmd]
+		return await command.invoke(ctx)
 
 class FlagFragment(Fragment):
-	async def invoke(self, message):
-		cmd = self.content[2:-2].strip()
-		return cmd
+	async def invoke(self, ctx):
+		flags = self.content[2:-2].strip()
+		return flags
