@@ -1,5 +1,6 @@
 import discord
 from . import log
+from .fragment import fragment
 
 class EndreBot(discord.Client):
 	modules = {}
@@ -18,11 +19,11 @@ class EndreBot(discord.Client):
 	
 	async def on_message(self, message):
 		if message.author != self.user: return
-		if message.content.startswith('{{') and message.content.endswith('}}'):
-			cmd, *args = message.content[2:-2].strip().split()
-			command = self.commands.get(cmd)
-			if command:
-				await command.invoke(self, message)
+		
+		fragments = fragment(message.content)
+		new_content = ''.join([(await frag.invoke(message)) for frag in fragments])
+		if message.content != new_content:
+			await message.edit(content=new_content)
 	
 	def run(self, token):
 		super().run(token, bot=False)

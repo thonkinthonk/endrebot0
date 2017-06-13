@@ -25,15 +25,15 @@ class Fragment:
 		return '%s[%s]' % (self.__class__.__name__, repr(self.content))
 
 class TextFragment(Fragment):
-	def invoke(self, message):
+	async def invoke(self, message):
 		return self.content
 
 class CommandFragment(Fragment):
-	def invoke(self, message):
+	async def invoke(self, message):
 		cmd = self.content[2:-2].strip()
 		return cmd
 
 class FlagFragment(Fragment):
-	def invoke(self, message):
+	async def invoke(self, message):
 		cmd = self.content[2:-2].strip()
 		return cmd
