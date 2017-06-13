@@ -22,10 +22,14 @@ class EndreBot(discord.Client):
 		if message.author != self.user: return
 		
 		ctx = Context(self, message)
-		fragments = fragment(message.content)
-		new_content = ''.join([(await frag.invoke(ctx)) or '' for frag in fragments])
-		if message.content != new_content:
-			await message.edit(content=new_content)
+		new_content = []
+		for frag in fragment(message.content):
+			ctx.set_fragment(frag)
+			frag_ret = await frag.invoke(ctx)
+			if frag_ret:
+				new_content.append(frag_ret)
+		if new_content:
+			await message.edit(content=''.join(new_content))
 	
 	def run(self, token):
 		super().run(token, bot=False)
