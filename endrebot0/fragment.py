@@ -33,8 +33,11 @@ class TextFragment(Fragment):
 class CommandFragment(Fragment):
 	async def invoke(self, ctx):
 		cmd = self.content[2:-2].strip()
-		command = ctx.bot.commands[cmd]
-		return await command.invoke(ctx)
+		code = 'async def evaluation(ctx):\n\treturn %s' % cmd
+		locals_ = locals()
+		globals_ = dict(globals(), **ctx.bot.commands)
+		exec(code, globals_, locals_)
+		return str(await locals_['evaluation'](ctx))
 
 class FlagFragment(Fragment):
 	async def invoke(self, ctx):

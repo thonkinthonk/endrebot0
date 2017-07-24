@@ -1,14 +1,14 @@
 from ..command import *
 
-@command()
+@command
 async def ping(ctx):
 	return 'Pong!'
 
-@command()
+@command
 async def delete(ctx):
 	await ctx.message.delete()
 
-@command()
+@command
 async def shutdown(ctx):
 	await ctx.message.delete()
 	await ctx.bot.close()

@@ -1,6 +1,21 @@
-import sys
+import asyncio, functools, inspect, sys
 
 __all__ = ['command', 'Context']
+
+def command(fn):
+	"""Decorator for functions that should be exposed as commands."""
+	module = sys.modules[fn.__module__]
+	command_fn = fn if asyncio.iscoroutinefunction(fn) else asyncio.coroutine(fn)
+	@functools.wraps(fn)
+	async def wrapper(*args, **kwargs):
+		try:
+			frame = inspect.currentframe()
+			ctx = frame.f_back.f_locals['ctx']
+			return await command_fn(ctx, *args, **kwargs)
+		finally:
+			del frame
+	vars(module).setdefault('commands', {})[fn.__name__] = wrapper
+	return wrapper
 
 def _message_prop(name):
 	def getter(self):
@@ -13,27 +28,6 @@ def _message_prop(name):
 		del self.__dict__[name]
 	
 	return property(getter, setter, deleter)
-
-def command(name=None):
-	def decorator(fn):
-		command = Command(name or fn.__name__, fn)
-		module = sys.modules[fn.__module__]
-		if hasattr(module, 'commands'):
-			commands = getattr(module, 'commands')
-		else:
-			commands = {}
-			setattr(module, 'commands', commands)
-		commands[name or fn.__name__] = command
-		return command
-	return decorator
-
-class Command:
-	def __init__(self, name, fn):
-		self.name = name
-		self.fn = fn
-	
-	async def invoke(self, ctx):
-		return await self.fn(ctx)
 
 class Context:
 	def __init__(self, bot, message):
@@ -50,4 +44,3 @@ class Context:
 	
 	def set_fragment(self, fragment):
 		self.fragment = fragment
-		# TODO: parse args
