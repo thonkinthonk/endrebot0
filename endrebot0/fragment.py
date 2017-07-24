@@ -40,7 +40,7 @@ class CommandFragment(Fragment):
 		ret = await locals_['evaluation'](ctx)
 		if asyncio.iscoroutine(ret):
 			ret = await ret
-		elif asyncio.iscoroutinefunction(ret):
+		elif ret in ctx.bot.commands.values():
 			ret = await ret()
 		return str(ret)
 

@@ -29,6 +29,30 @@ def _message_prop(name):
 	
 	return property(getter, setter, deleter)
 
+def _channel_prop(name):
+	def getter(self):
+		return self.__dict__.setdefault(name, getattr(self.message.channel, name))
+	
+	def setter(self, val):
+		self.__dict__[name] = val
+	
+	def deleter(self):
+		del self.__dict__[name]
+	
+	return property(getter, setter, deleter)
+
+def _guild_prop(name):
+	def getter(self):
+		return self.__dict__.setdefault(name, getattr(self.message.guild, name))
+	
+	def setter(self, val):
+		self.__dict__[name] = val
+	
+	def deleter(self):
+		del self.__dict__[name]
+	
+	return property(getter, setter, deleter)
+
 class Context:
 	def __init__(self, bot, message):
 		self.bot = bot
@@ -36,11 +60,11 @@ class Context:
 	
 	channel = _message_prop('channel')
 	guild = _message_prop('guild')
-	send = _message_prop('send')
-	
-	@send.getter
-	def send(self):
-		return self.__dict__.setdefault('send', self.message.channel.send)
+	author = _message_prop('author')
+	send = _channel_prop('send')
+	history = _channel_prop('history')
+	pins = _channel_prop('pins')
+	me = _guild_prop('me')
 	
 	def set_fragment(self, fragment):
 		self.fragment = fragment
