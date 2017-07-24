@@ -1,4 +1,4 @@
-import re
+import asyncio, re
 
 __all__ = ['fragment']
 
@@ -33,13 +33,39 @@ class TextFragment(Fragment):
 class CommandFragment(Fragment):
 	async def invoke(self, ctx):
 		cmd = self.content[2:-2].strip()
-		code = 'async def evaluation(ctx):\n\treturn %s' % cmd
+		code = create_function(cmd)
 		locals_ = locals()
 		globals_ = dict(globals(), **ctx.bot.commands)
 		exec(code, globals_, locals_)
-		return str(await locals_['evaluation'](ctx))
+		ret = await locals_['evaluation'](ctx)
+		if asyncio.iscoroutine(ret):
+			ret = await ret
+		elif asyncio.iscoroutinefunction(ret):
+			ret = await ret()
+		return str(ret)
 
 class FlagFragment(Fragment):
 	async def invoke(self, ctx):
 		flags = self.content[2:-2].strip()
 		return flags
+
+def create_function(code):
+	if code.startswith('```'): code = code[code.find('\n'):code.rfind('\n')].strip() # Remove multiline code blocks
+	elif code.startswith('`'): code = code[1:-1].strip() # Remove single-line code blocks
+	
+	function_header = 'async def evaluation(ctx):'
+	
+	lines = code.splitlines()
+	if len(lines) > 1:
+		indent = 4
+		for line in lines:
+			line_indent = re.search(r'\S', line).start() # First non-WS character is length of indent
+			if line_indent:
+				indent = line_indent
+				break
+		line_sep = '\n' + ' ' * indent
+		return function_header + line_sep + line_sep.join(lines)
+	elif code.startswith(('return', 'del')) or '=' in code:
+		return function_header + '\n    ' + code
+	else:
+		return function_header + '\n    return ' + code
