@@ -1,3 +1,4 @@
+import discord
 from ..command import *
 
 @command
@@ -9,6 +10,6 @@ async def delete(ctx):
 	await ctx.message.delete()
 
 @command
-async def shutdown(ctx):
+async def game(ctx, game):
+	await ctx.bot.change_presence(game=discord.Game(name=game))
 	await ctx.message.delete()
-	await ctx.bot.close()
