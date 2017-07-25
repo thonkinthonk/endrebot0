@@ -42,7 +42,7 @@ class CommandFragment(Fragment):
 			ret = await ret
 		elif ret in ctx.bot.commands.values():
 			ret = await ret()
-		return str(ret)
+		return ret if ret is None else str(ret)
 
 class FlagFragment(Fragment):
 	async def invoke(self, ctx):
