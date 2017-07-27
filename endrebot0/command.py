@@ -1,6 +1,6 @@
 import asyncio, functools, inspect, sys
 
-__all__ = ['command', 'Context']
+__all__ = ['command', 'Context', 'listener', 'on']
 
 def command(fn):
 	"""Decorator for functions that should be exposed as commands."""
@@ -16,6 +16,17 @@ def command(fn):
 			del frame
 	vars(module).setdefault('commands', {})[fn.__name__] = wrapper
 	return wrapper
+
+def listener(event=None):
+	def decorator(fn):
+		module = sys.modules[fn.__module__]
+		coro_fn = fn if asyncio.iscoroutinefunction(fn) else asyncio.coroutine(fn)
+		vars(module).setdefault('listeners', {}).setdefault(event, []).append(coro_fn)
+		return fn
+	return decorator
+
+def on(event):
+	return listener('on_' + event)
 
 def _message_prop(name):
 	def getter(self):
