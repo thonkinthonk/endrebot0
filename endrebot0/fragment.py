@@ -1,18 +1,17 @@
-import asyncio, re
+import asyncio, discord, inspect, re
 
 __all__ = ['fragment']
 
-_pattern = re.compile(r'(\{\{[^\}]*\}\})|(\{\[[^\]]*\]\})')
+_pattern = re.compile(r'\{\{[^\}]*\}\}')
 
 def fragment(content):
 	code_fragments = _pattern.findall(content)
 	idx = 0
 	for frag in code_fragments:
-		frag_content = frag[0] or frag[1]
-		frag_start = content.find(frag_content, idx)
+		frag_start = content.find(frag, idx)
 		if frag_start != idx: yield TextFragment(content[idx:frag_start])
-		yield CommandFragment(frag[0]) if frag[0] else FlagFragment(frag[1])
-		idx = frag_start + len(frag_content)
+		yield CommandFragment(frag)
+		idx = frag_start + len(frag)
 	if idx < len(content):
 		yield TextFragment(content[idx:]) # This will only be text
 
@@ -36,18 +35,22 @@ class CommandFragment(Fragment):
 		code = create_function(cmd)
 		locals_ = locals()
 		globals_ = dict(globals(), **ctx.bot.commands)
-		exec(code, globals_, locals_)
-		ret = await locals_['evaluation'](ctx)
-		if asyncio.iscoroutine(ret):
-			ret = await ret
-		elif ret in ctx.bot.commands.values():
-			ret = await ret()
+		
+		try:
+			exec(code, globals_, locals_)
+		except SyntaxError as err:
+			return 'SyntaxError: %s' % err
+		
+		try:
+			ret = await locals_['evaluation'](ctx)
+			if asyncio.iscoroutine(ret):
+				ret = await ret
+			elif ret in ctx.bot.commands.values():
+				ret = await ret()
+		except Exception as err:
+			return '%s: %s' % (type(err).__name__, err)
+		
 		return ret if ret is None else str(ret)
-
-class FlagFragment(Fragment):
-	async def invoke(self, ctx):
-		flags = self.content[2:-2].strip()
-		return flags
 
 def create_function(code):
 	if code.startswith('```'): code = code[code.find('\n'):code.rfind('\n')].strip() # Remove multiline code blocks
