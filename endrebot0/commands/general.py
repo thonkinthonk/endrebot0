@@ -40,3 +40,8 @@ async def afk(ctx, *args, **kwargs):
 @command
 async def unafk(ctx, *args, **kwargs):
 	await afk_send(ctx, 'unafk_message', *args, **kwargs)
+
+@command
+async def purge(ctx, qty, self=True):
+	check = (lambda m: m.author == ctx.author) if self else None
+	await ctx.channel.purge(limit=qty+1, check=check)

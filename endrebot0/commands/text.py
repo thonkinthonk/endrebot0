@@ -24,3 +24,10 @@ async def sed_sub(message):
 		await msg.edit(content=new_content)
 	await message.delete()
 
+@command
+async def shrug(ctx):
+	return r'¯\_(ツ)_/¯'
+
+@command
+async def umm(ctx):
+	return 'ಠ_ಠ'
