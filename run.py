@@ -10,5 +10,6 @@ for _, name, _ in pkgutil.iter_modules(['endrebot0/commands']):
 
 with open('config/config.json') as f:
 	cfg = json.load(f)
+	bot.config = cfg
 	bot.run(cfg['token'])
 	log.shutdown()
