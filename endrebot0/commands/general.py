@@ -3,7 +3,8 @@ from ..command import *
 
 @command
 async def ping(ctx):
-	return 'Pong!'
+	await ctx.message.edit(content='pong')
+	return ctx.message.edited_at - ctx.message.created_at
 
 @command
 async def delete(ctx):

@@ -36,7 +36,7 @@ async def reactspell(ctx, react_message, message_id, channel=None):
 	
 	if channel is None:
 		channel = ctx.channel
-	elif isinstance(channel. int):
+	elif isinstance(channel, int):
 		channel = get(ctx.bot.get_all_channels(), id=channel)
 	elif isinstance(channel, str):
 		channel = get(ctx.guild.text_channels, name=channel) or get(ctx.bot.get_all_channels(), name=channel)
