@@ -4,7 +4,7 @@ from ..command import *
 sed_re = re.compile(r's/([^\/]+)/(.+)', re.IGNORECASE)
 
 @command
-async def zws(ctx):
+def zws(ctx):
 	return '\N{ZERO WIDTH SPACE}'
 
 @on('message')
@@ -26,8 +26,8 @@ async def sed_sub(message):
 
 @command
 async def shrug(ctx):
-	return r'¯\_(ツ)_/¯'
+	return r'¯\\\_(ツ)\_/¯'
 
 @command
 async def umm(ctx):
-	return 'ಠ_ಠ'
+	return 'ಠ\_ಠ'

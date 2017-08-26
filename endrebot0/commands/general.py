@@ -11,8 +11,9 @@ async def delete(ctx):
 	await ctx.message.delete()
 
 @command
-async def game(ctx, game):
-	await ctx.bot.change_presence(game=discord.Game(name=game))
+async def game(ctx, game, status=None):
+	status = discord.Status[status] if status else discord.Status.online
+	await ctx.bot.change_presence(status=status, game=discord.Game(name=game))
 	await ctx.message.delete()
 
 afk_targets = None
@@ -35,8 +36,12 @@ async def afk_send(ctx, message_key, *args, **kwargs):
 	await ctx.message.delete()
 
 @command
-async def afk(ctx, *args, **kwargs):
+async def afk(ctx, *args, status=None, **kwargs):
 	await afk_send(ctx, 'afk_message', *args, **kwargs)
+	if status == 'offline':
+		await ctx.bot.change_presence(status=discord.Status.invisible)
+	elif status is not None:
+		await ctx.bot.change_presence(status=discord.Status[status], game=discord.Game(name='AFK: ' + ', '.join(args)))
 
 @command
 async def unafk(ctx, *args, **kwargs):
