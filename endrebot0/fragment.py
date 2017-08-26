@@ -65,7 +65,7 @@ class CommandFragment(Fragment):
 			if asyncio.iscoroutine(ret):
 				ret = await ret
 			elif ret in ctx.bot.commands.values():
-				ret = await ret()
+				ret = await ret() if asyncio.iscoroutinefunction(ret) else ret()
 		except Exception as err:
 			traceback.print_exception(type(err), err, err.__traceback__)
 			return '%s: %s' % (type(err).__name__, err)

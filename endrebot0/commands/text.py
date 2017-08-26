@@ -25,9 +25,9 @@ async def sed_sub(message):
 	await message.delete()
 
 @command
-async def shrug(ctx):
+def shrug(ctx):
 	return r'¯\\\_(ツ)\_/¯'
 
 @command
-async def umm(ctx):
+def umm(ctx):
 	return 'ಠ\_ಠ'

@@ -7,7 +7,7 @@ async def shutdown(ctx):
 	await ctx.bot.close()
 
 @command
-async def reload(ctx, *modules):
+def reload(ctx, *modules):
 	for mod in modules:
 		module = sys.modules['endrebot0.commands.%s' % mod]
 		importlib.reload(module)

@@ -5,15 +5,24 @@ __all__ = ['command', 'Context', 'listener', 'on']
 def command(fn):
 	"""Decorator for functions that should be exposed as commands."""
 	module = sys.modules[fn.__module__]
-	command_fn = fn if asyncio.iscoroutinefunction(fn) else asyncio.coroutine(fn)
-	@functools.wraps(fn)
-	async def wrapper(*args, **kwargs):
-		try:
-			frame = inspect.currentframe()
-			ctx = frame.f_back.f_locals['ctx']
-			return await command_fn(ctx, *args, **kwargs)
-		finally:
-			del frame
+	if asyncio.iscoroutinefunction(fn):
+		@functools.wraps(fn)
+		async def wrapper(*args, **kwargs):
+			try:
+				frame = inspect.currentframe()
+				ctx = frame.f_back.f_locals['ctx']
+				return await fn(ctx, *args, **kwargs)
+			finally:
+				del frame
+	else:
+		@functools.wraps(fn)
+		def wrapper(*args, **kwargs):
+			try:
+				frame = inspect.currentframe()
+				ctx = frame.f_back.f_locals['ctx']
+				return fn(ctx, *args, **kwargs)
+			finally:
+				del frame
 	vars(module).setdefault('commands', {})[fn.__name__] = wrapper
 	return wrapper
 
