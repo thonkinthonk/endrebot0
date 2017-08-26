@@ -3,10 +3,6 @@ from ..command import *
 
 sed_re = re.compile(r's/([^\/]+)/(.+)', re.IGNORECASE)
 
-@command
-def zws(ctx):
-	return '\N{ZERO WIDTH SPACE}'
-
 @on('message')
 async def sed_sub(message):
 	m = sed_re.match(message.content)
@@ -23,11 +19,3 @@ async def sed_sub(message):
 	if message.content != new_content:
 		await msg.edit(content=new_content)
 	await message.delete()
-
-@command
-def shrug(ctx):
-	return r'¯\\\_(ツ)\_/¯'
-
-@command
-def umm(ctx):
-	return 'ಠ\_ಠ'

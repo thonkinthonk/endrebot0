@@ -11,7 +11,11 @@ Discord selfbot
 	"afk_messages": [
 		{"dest": ":channel_or_user_id", "afk_message": ":afk_command", "unafk_message": ":unafk_command"},
 		{"dest": "1234567890", "afk_message": "!afk {0}", "unafk_message": "unafk"}
-	]
+	],
+	"emoji": {
+		"shrug": "¯\\\\\\_(ツ)\\_/¯",
+		"zws": "\u200B"
+	}
 }
 ```
 1. Run: `python3 run.py` (Linux) / `py run.py` (Windows)
@@ -44,3 +48,8 @@ endrebot0 supports going into and coming out of AFK in multiple locations, on mu
 - `unafk_message` is the message that will be sent when `unafk` is sent. The arguments passed into `unafk()` are used to format this message.
 
 For example, with the above configuration, calling `afk('sleep')` would send the message `!afk sleep` to the user/channel with ID 1234567890. Calling `unafk()` will send `unafk` to the same place.
+
+## Emoji
+The `emoji` config is an object. The keys are names of your custom text emojis, and the values are the text that replaces them. With the example config, `:zws:` would be replaced with a zero-width space in any message. `: shrug :` would be replaced by the ASCII shrugging face. (Spaces are optional on all emoji, but required for this one to not conflict with the builtin shrug emoji.)
+
+If the special key `_enclosure` is defined, its value is used instead of colons to mark what encloses a custom emoji. The enclosure can use regular expressions. For example, to allow semicolons in addition to colons, you would add `"_enclosure": [:;]` to your config. (Spacing is handled separately from the enclosure and always enabled.)

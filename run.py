@@ -1,9 +1,9 @@
 import json, importlib, pkgutil
 from endrebot0 import EndreBot, log
 
-log.info('endrebot0 v0.4.0')
+log.info('endrebot0 v0.10.0')
 
-with open('config.json') as f:
+with open('config.json', encoding='utf-8') as f:
 	cfg = json.load(f)
 	bot = EndreBot(cfg)
 
