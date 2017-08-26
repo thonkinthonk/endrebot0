@@ -1,4 +1,4 @@
-import asyncio, discord, inspect, itertools, operator, re
+import asyncio, discord, inspect, itertools, operator, re, traceback
 
 __all__ = ['Fragmenter']
 
@@ -47,15 +47,15 @@ class TextFragment(Fragment):
 class CommandFragment(Fragment):
 	def __init__(self, content, code):
 		super().__init__(content)
-		self.code = code.strip()
+		if code.startswith('```'): # Remove multiline code blocks
+			self.code = code.strip('```').partition('\n')[2].strip()
+		else: # Remove single-line code blocks, if necessary
+			self.code = code.strip('`').strip()
 	
 	async def invoke(self, ctx):
-		code = create_function(self.code)
-		locals_ = locals()
-		globals_ = dict(globals(), **ctx.bot.commands)
-		
+		locals_ = locals().copy()
 		try:
-			exec(code, globals_, locals_)
+			load_function(self.code, dict(globals(), **ctx.bot.commands), locals_)
 		except SyntaxError as err:
 			return 'SyntaxError: %s' % err
 		
@@ -66,14 +66,12 @@ class CommandFragment(Fragment):
 			elif ret in ctx.bot.commands.values():
 				ret = await ret()
 		except Exception as err:
+			traceback.print_exception(type(err), err, err.__traceback__)
 			return '%s: %s' % (type(err).__name__, err)
-		
-		return ret if ret is None else str(ret)
+		else:
+			return str(ret)
 
-def create_function(code):
-	if code.startswith('```'): code = code[code.find('\n'):code.rfind('\n')].strip() # Remove multiline code blocks
-	elif code.startswith('`'): code = code[1:-1].strip() # Remove single-line code blocks
-	
+def load_function(code, globals_, locals_):
 	function_header = 'async def evaluation(ctx):'
 	
 	lines = code.splitlines()
@@ -85,8 +83,12 @@ def create_function(code):
 				indent = line_indent
 				break
 		line_sep = '\n' + ' ' * indent
-		return function_header + line_sep + line_sep.join(lines)
-	elif code.startswith(('return', 'del')) or '=' in code:
-		return function_header + '\n    ' + code
+		exec(function_header + line_sep + line_sep.join(lines), globals_, locals_)
 	else:
-		return function_header + '\n    return ' + code
+		try:
+			exec(function_header + '\n\treturn ' + lines[0], globals_, locals_)
+		except SyntaxError as err: # Either adding the 'return' caused an error, or it's user error
+			if err.text[err.offset-1] == '=' or err.text[err.offset-3:err.offset] == 'del': # return-caused error
+				exec(function_header + '\n\t' + lines[0], globals_, locals_)
+			else: # user error
+				raise err
