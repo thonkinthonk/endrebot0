@@ -7,9 +7,10 @@ class EndreBot(discord.Client):
 	modules = {}
 	commands = {}
 	
-	def __init__(self):
+	def __init__(self, config):
 		super().__init__()
-		log.info('endrebot0 v0.4.0')
+		self.config = config
+		self.fragment = Fragmenter(*config['fragments'])
 	
 	def add_module(self, module):
 		self.modules[module.__name__] = module
@@ -35,7 +36,7 @@ class EndreBot(discord.Client):
 		ctx = Context(self, message)
 		frag_results = []
 		changed = False
-		for frag in fragment(message.content):
+		for frag in self.fragment(message.content):
 			frag_ret = await frag.invoke(ctx)
 			if frag_ret is not None:
 				frag_results.append(frag_ret)
@@ -45,8 +46,8 @@ class EndreBot(discord.Client):
 		
 		await self.call_listeners(message)
 	
-	def run(self, token):
-		super().run(token, bot=False)
+	def run(self):
+		super().run(self.config['token'], bot=False)
 	
 	async def call_listeners(self, *args, event_name=None, **kwargs):
 		if event_name is None:
@@ -60,4 +61,3 @@ class EndreBot(discord.Client):
 		if event_name in self._listeners:
 			for listener in self._listeners[event_name]:
 				await listener(*args, **kwargs)
-

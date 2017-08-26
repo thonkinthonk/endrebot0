@@ -1,19 +1,34 @@
-import asyncio, discord, inspect, re
+import asyncio, discord, inspect, itertools, operator, re
 
-__all__ = ['fragment']
+__all__ = ['Fragmenter']
 
-_pattern = re.compile(r'\{\{[^\}]*\}\}')
+def strfind(str_, subs, *find_args):
+	inds = [tup for tup in ((sub, str_.find(sub, *find_args)) for sub in subs) if tup[1] >= 0]
+	return min(inds, key=operator.itemgetter(1)) if inds else ('', -1)
 
-def fragment(content):
-	code_fragments = _pattern.findall(content)
-	idx = 0
-	for frag in code_fragments:
-		frag_start = content.find(frag, idx)
-		if frag_start != idx: yield TextFragment(content[idx:frag_start])
-		yield CommandFragment(frag)
-		idx = frag_start + len(frag)
-	if idx < len(content):
-		yield TextFragment(content[idx:]) # This will only be text
+class Fragmenter:
+	def __init__(self, fragment_start, fragment_end):
+		self.start = fragment_start
+		self.end = fragment_end
+	
+	def __call__(self, content):
+		idx, start, end = 0, 0, 0
+		stack_height = 0
+		while idx < len(content):
+			match, end = strfind(content, (self.start, self.end), idx)
+			if end == -1:
+				yield TextFragment(content[idx:])
+				break
+			if match == self.start:
+				if not stack_height:
+					if idx != end: yield TextFragment(content[idx:end])
+					start = end
+				stack_height += 1
+			else:
+				stack_height -= 1
+				if not stack_height:
+					yield CommandFragment(content[start:end+len(match)], content[start+len(self.start):end])
+			idx = end + len(match)
 
 class Fragment:
 	def __init__(self, content):
@@ -30,9 +45,12 @@ class TextFragment(Fragment):
 		return self.content
 
 class CommandFragment(Fragment):
+	def __init__(self, content, code):
+		super().__init__(content)
+		self.code = code.strip()
+	
 	async def invoke(self, ctx):
-		cmd = self.content[2:-2].strip()
-		code = create_function(cmd)
+		code = create_function(self.code)
 		locals_ = locals()
 		globals_ = dict(globals(), **ctx.bot.commands)
 		
