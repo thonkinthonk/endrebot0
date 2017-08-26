@@ -57,6 +57,7 @@ class CommandFragment(Fragment):
 		try:
 			load_function(self.code, dict(globals(), **ctx.bot.commands), locals_)
 		except SyntaxError as err:
+			traceback.print_exception(type(err), err, err.__traceback__)
 			return 'SyntaxError: %s' % err
 		
 		try:
@@ -88,7 +89,7 @@ def load_function(code, globals_, locals_):
 		try:
 			exec(function_header + '\n\treturn ' + lines[0], globals_, locals_)
 		except SyntaxError as err: # Either adding the 'return' caused an error, or it's user error
-			if err.text[err.offset-1] == '=' or err.text[err.offset-3:err.offset] == 'del': # return-caused error
+			if err.text[err.offset-1] == '=' or err.text[err.offset-3:err.offset] == 'del' or err.text[err.offset-6:err.offset] == 'return': # return-caused error
 				exec(function_header + '\n\t' + lines[0], globals_, locals_)
 			else: # user error
 				raise err
