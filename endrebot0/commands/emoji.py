@@ -11,7 +11,7 @@ def init(bot):
 		return emoji[match.group(1).strip().lower()]
 
 @on('message')
-async def insert_emoji(message):
+async def insert_emoji(bot, message):
 	old = message.content
 	new = emoji_re.sub(emoji_sub, old)
 	if old != new:

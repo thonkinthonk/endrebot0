@@ -1,4 +1,4 @@
-import discord, inspect
+import collections, discord, inspect
 from . import log
 from .command import *
 from .fragment import *
@@ -6,6 +6,7 @@ from .fragment import *
 class EndreBot(discord.Client):
 	modules = {}
 	commands = {}
+	listeners = collections.defaultdict(list)
 	
 	def __init__(self, config):
 		super().__init__()
@@ -14,21 +15,22 @@ class EndreBot(discord.Client):
 	
 	def add_module(self, module):
 		self.modules[module.__name__] = module
+		
 		if hasattr(module, 'commands'):
 			self.commands.update(module.commands)
+		
 		if hasattr(module, 'listeners'):
 			for event, listeners in module.listeners.items():
 				if not hasattr(self, event):
 					async def event_handler(self_, *args, **kwargs):
-						await self_.call_listeners(*args, **kwargs)
+						await self_.call_listeners(*args, event_name=event, **kwargs)
 					event_handler.__name__ = event
 					setattr(type(self), event, event_handler)
-					print(event_handler.__code__.co_name)
-				self._listeners.setdefault(event, []).extend(listeners)
+				self.listeners[event].extend(listeners)
 	
 	async def on_ready(self):
-		log.info('Logged in as %s (%s)' % (self.user, self.user.id))
-		await self.call_listeners(self)
+		log.info('Logged in as {0} ({0.id})'.format(self.user))
+		await self.call_listeners()
 	
 	async def on_message(self, message):
 		if message.author != self.user: return
@@ -58,6 +60,6 @@ class EndreBot(discord.Client):
 				del frame
 		if not event_name.startswith('on_'):
 			event_name = 'on_' + event_name
-		if event_name in self._listeners:
-			for listener in self._listeners[event_name]:
-				await listener(*args, **kwargs)
+		
+		for listener in self.listeners[event_name]:
+			await listener(self, *args, **kwargs)

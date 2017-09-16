@@ -2,10 +2,12 @@ import asyncio, functools, inspect, sys
 
 __all__ = ['command', 'Context', 'listener', 'on']
 
-def command(fn):
+def command(fn, name=None):
 	"""Decorator for functions that should be exposed as commands."""
 	module = sys.modules[fn.__module__]
-	if asyncio.iscoroutinefunction(fn):
+	if name is None:
+		name = fn.__name__
+	if asyncio.iscoroutinefunction(fn if inspect.isfunction(fn) else fn.__func__ if inspect.ismethod(fn) else fn.__call__): # Get the actual function for coroutine check
 		@functools.wraps(fn)
 		async def wrapper(*args, **kwargs):
 			try:

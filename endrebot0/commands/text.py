@@ -4,7 +4,7 @@ from ..command import *
 sed_re = re.compile(r's/([^\/]+)/(.+)', re.IGNORECASE)
 
 @on('message')
-async def sed_sub(message):
+async def sed_sub(bot, message):
 	m = sed_re.match(message.content)
 	if not m: return
 	async for msg in message.channel.history(before=message):
