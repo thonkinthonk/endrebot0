@@ -9,16 +9,22 @@ class repl:
 		self.start_message = None
 		self.channel = None
 		self.target = None
+		self.cleanup = False
 	
 	async def start(self, ctx, target=None):
 		self.start_message = ctx.message
 		self.channel = ctx.channel
 		self.target = target and await self.target_finder.convert(ctx, target)
-		return 'REPL running for {}'.format(self.target or 'no target')
+		self.cleanup = bool(self.target and self.channel.permissions_for(ctx.me).manage_messages)
+		return 'REPL running for {} ({})'.format(self.target or 'no target', self.cleanup)
 	
 	async def stop(self, ctx):
+		channel, self.channel = self.channel, None # Stop the repl session without losing reference to the channel
+		async for msg in channel.history(after=self.start_message):
+			if msg.author == ctx.me and msg.reactions:
+				await msg.remove_reaction(self.reaction, ctx.me) # Fails silently; reactions check is just for efficiency
 		await self.start_message.delete()
-		self.start_message = self.channel = self.target = None
+		self.start_message = self.target = None
 		await ctx.message.delete()
 	
 	async def __call__(self, ctx):
@@ -29,9 +35,17 @@ class repl:
 			await message.add_reaction(self.reaction)
 	
 	async def redo(self, bot, reaction, member):
-		if member.id == bot.user.id and reaction.emoji == self.reaction and reaction.message.channel == self.channel:
-			await reaction.message.delete()
-			await self.channel.send(reaction.message.content)
+		if member.id != bot.user.id or reaction.emoji != self.reaction or reaction.message.channel != self.channel:
+			return
+		
+		message = reaction.message
+		if self.cleanup:
+			async for msg in message.channel.history(after=message):
+				if msg.author == self.target:
+					await msg.delete()
+		
+		await message.delete()
+		await self.channel.send(message.content)
 	
 	@property
 	def running(self):
