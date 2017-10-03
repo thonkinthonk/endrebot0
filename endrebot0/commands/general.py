@@ -7,8 +7,11 @@ async def ping(ctx):
 	return ctx.message.edited_at - ctx.message.created_at
 
 @command
-async def delete(ctx):
+async def delete(ctx, qty=0):
 	await ctx.message.delete()
+	for _ in range(qty):
+		m = await ctx.bot.wait_for('message', check=lambda m: (m.channel, m.author) == (ctx.channel, ctx.author))
+		await m.delete()
 
 @command
 async def game(ctx, game, status=None):
