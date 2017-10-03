@@ -22,6 +22,8 @@ def member(ctx, keyless=None, all=True, **attrs):
 		checks = (lambda mem: keyless in (mem.name, str(mem), mem.display_name),)
 	elif keyless is not None:
 		return 'Unable to infer key from {0.module.__name__}.{0.__qualname__}'.format(type(keyless))
+	else:
+		checks = ()
 	return next(ExtendedFilter(members, *checks, **attrs))
 
 @command
@@ -35,6 +37,8 @@ def members(ctx, keyless=None, all=True, **attrs):
 		checks = (lambda mem: keyless in (mem.name, str(mem), mem.display_name),)
 	elif keyless is not None:
 		return 'Unable to infer key from {0.module.__name__}.{0.__qualname__}'.format(type(keyless))
+	else:
+		checks = ()
 	return list(ExtendedFilter(members, *checks, **attrs))
 
 @command
