@@ -48,8 +48,8 @@ class EndreBot(discord.Client):
 		
 		await self.call_listeners(message)
 	
-	def run(self):
-		super().run(self.config['token'], bot=False)
+	def run(self, token):
+		super().run(token, bot=False)
 	
 	async def call_listeners(self, *args, event_name=None, **kwargs):
 		if event_name is None:
