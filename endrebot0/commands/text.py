@@ -32,13 +32,13 @@ def box(ctx, text):
 def arrow(ctx, text, dir=0):
 	left, up = not (dir % 2), not (dir >> 1)
 	reverse_diag = left ^ up
-	text = text.upper().replace(' ', '')
+	text = text.upper().replace(' ', '|')
 	rows = [[' ' for _ in text] for _ in text] # Grid of spaces to fill in
 	rows[0 if up else -1][:] = list(text)
 	for i, (row, letter) in enumerate(zip(rows, reversed(text) if reverse_diag else text)):
 		row[-i-1 if reverse_diag else i] = letter
 		rows[i][0 if left else -1] = letter
-	return '\n'.join(('```', *map(' '.join, rows), '```'))
+	return '\n'.join(('\`\`\`\', *map(' '.join, rows), '\`\`\`\'))
 
 @command
 def xbox(ctx, text):
